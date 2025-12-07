@@ -1,7 +1,9 @@
 from Assets import *
+from picture_puzzle import Game as PicturePuzzle
 
 pygame.init()
 FONT = pygame.font.SysFont("constantia", 18)
+BIGFONT = pygame.font.SysFont("constantia", 30)
 
 WIDTH, HEIGHT = 960, 540
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -9,6 +11,7 @@ pygame.display.set_caption("Escape Room")
 
 bg = pygame.image.load("pics/startbackground.png").convert()
 bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
+
 
 # Candle Puzzle
 bg_candle_puzzle = pygame.image.load("pics/candlepuzzlebackground.png").convert()
@@ -33,7 +36,6 @@ def draw_candle_puzzle():
 
 def check_order(Candles):
     order = Candles[:]
-
     for i in range(len(order)):
         for j in range(0, len(order) - i - 1):
             if order[j].rect.x > order[j + 1].rect.x:
@@ -51,6 +53,7 @@ def check_order(Candles):
             return False
 
     return True
+
 
 # Clock Puzzle
 bg_clock_puzzle = pygame.image.load("pics/clock.png")
@@ -76,13 +79,53 @@ def draw_clock_puzzle():
     pygame.draw.line(WIN, (0, 0, 0), (cx, cy), min_angles[min_point], 6)
     pygame.draw.line(WIN, (0, 0, 0), (cx, cy), hr_angles[hr_point], 8)
 
+
+# Picture Puzzle
+picturepuzzle = PicturePuzzle()
+
+picture_puzzle_click_box = pygame.Rect(410, 90, 145, 140)
+picture_exit_click_box = pygame.Rect(0,0, 960, 100)
+
+# End Puzzle
+end_puzzle_click_box = pygame.Rect(750, 130, 110, 380)
+end_exit_click_box = pygame.Rect(0,0, 960, 100)
+
+maid_click_box = pygame.Rect(20, 250, 215, 300)
+gardener_click_box = pygame.Rect(235, 190, 210, 400)
+wife_click_box = pygame.Rect(450, 210, 230, 400)
+chef_click_box = pygame.Rect(690, 190, 240, 400)
+
+bg_end_puzzle = pygame.image.load("pics/end.png")
+bg_end_puzzle = pygame.transform.scale(bg_end_puzzle, (WIDTH, HEIGHT))
+
+def draw_end_puzzle():
+    WIN.blit(bg_end_puzzle, (0, 0))
+    # pygame.draw.rect(WIN, (255, 0, 0), gardener_click_box, 3)
+    # pygame.draw.rect(WIN, (255, 0, 0), maid_click_box, 3)
+    # pygame.draw.rect(WIN, (255, 0, 0), wife_click_box, 3)
+    # pygame.draw.rect(WIN, (255, 0, 0), chef_click_box, 3)
+
+# Lose Scene
+bg_lose = pygame.image.load("pics/lose.png")
+bg_lose = pygame.transform.scale(bg_lose, (WIDTH, HEIGHT))
+
+def draw_lose():
+    WIN.blit(bg_lose, (0, 0))
+
+# Win Scene
+bg_win = pygame.image.load("pics/win.png")
+bg_win = pygame.transform.scale(bg_win, (WIDTH, HEIGHT))
+
+def draw_win():
+    WIN.blit(bg_win, (0, 0))
+
 # Game
 textbox = TextBox("pics/textbox.png", WIDTH / 2, HEIGHT / 2)
 text_sprites = pygame.sprite.Group(textbox)
 
 def draw_start():
     WIN.blit(bg, (0, 0))
-    #pygame.draw.rect(WIN, (255, 0, 0), clock_puzzle_click_box, 3)
+
 
 def main():
     run = True
@@ -105,6 +148,11 @@ def main():
                         scene = "candle_puzzle"
                     elif clock_puzzle_click_box.collidepoint(event.pos):
                         scene = "clock_puzzle"
+                    elif picture_puzzle_click_box.collidepoint(event.pos):
+                        scene = "picture_puzzle"
+                        picturepuzzle.new()
+                    elif end_puzzle_click_box.collidepoint(event.pos):
+                        scene = "end_puzzle"
                 elif scene == "candle_puzzle":
                     if candle_exit_click_box.collidepoint(event.pos):
                         scene = "start"
@@ -131,11 +179,26 @@ def main():
                             hr_point += 1
                         else:
                             hr_point = 0
+                elif scene == "picture_puzzle":
+                    if picture_exit_click_box.collidepoint(event.pos):
+                        scene = "start"
+                elif scene == "end_puzzle":
+                    if end_exit_click_box.collidepoint(event.pos):
+                        scene = "start"
+                    elif maid_click_box.collidepoint(event.pos):
+                        scene = "lose"
+                    elif gardener_click_box.collidepoint(event.pos):
+                        scene = "lose"
+                    elif wife_click_box.collidepoint(event.pos):
+                        scene = "lose"
+                    elif chef_click_box.collidepoint(event.pos):
+                        scene = "win"
+
+
             elif event.type == pygame.MOUSEBUTTONUP:
                 selected_sprite = None
                 if scene == "candle_puzzle" and check_order(Candles):
                     win = True
-
 
             elif event.type == pygame.MOUSEMOTION:
                 if selected_sprite:
@@ -150,13 +213,25 @@ def main():
             candle_sprites.update()
         elif scene == "clock_puzzle":
             draw_clock_puzzle()
+        elif scene == "picture_puzzle":
+            picturepuzzle.update()
+            picturepuzzle.draw()
+            picturepuzzle.events(event)
+        elif scene == "end_puzzle":
+            draw_end_puzzle()
+            text = BIGFONT.render("WHO DID IT?", True, ((128, 0, 32)))
+            WIN.blit(text, (360, 100),)
+        elif scene == "lose":
+            draw_lose()
+        elif scene == "win":
+            draw_win()
 
         if check_order(Candles):
             win = True
         if win and scene == "candle_puzzle":
             text_sprites.draw(WIN)
             clue_1 = ("After the last candle is in place, a note falls out of the drawer. It is a work"
-                      "\nschedule which shows that the Butler could not have been working at"
+                      "\nschedule which shows that the Maid could not have been working at"
                       "\nthe time of the murder.")
             clue_1_text = clue_1.splitlines()
             clue_1_lines = []
@@ -169,6 +244,18 @@ def main():
 
         if hr_point == 6 and min_point == 1 and scene == "clock_puzzle":
             text_sprites.draw(WIN)
+            clue_2 = ("The clock opens up, and you find a bottle of sleeping pills prescribed"
+                      "\nto the wife. You notice that the time on the clock corresponds to when"
+                      "\nshe planned to wake up. 6:15 was past the time of the murder, meaning"
+                      "\nshe was asleep during it.")
+            clue_2_text = clue_2.splitlines()
+            clue_2_lines = []
+            for line in clue_2_text:
+                clue_2_lines.append(FONT.render(line, True, (76, 38, 15)))
+            y_position = 370
+            for line_surface_2 in clue_2_lines:
+                WIN.blit(line_surface_2, (200, y_position))
+                y_position += 25
 
         pygame.display.flip()
 

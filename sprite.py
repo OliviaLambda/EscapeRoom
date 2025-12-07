@@ -1,6 +1,5 @@
 import pygame
 from pygame.examples.glcube import draw_cube_modern
-
 from settings import *
 
 pygame.font.init()
@@ -28,23 +27,23 @@ class Tile(pygame.sprite.Sprite):
 
         #for image, make 8 different images and blit the images
     def update(self):
-        self.rect.x = self.x * TILESIZE
-        self.rect.y = self.y * TILESIZE
+        self.rect.x = PUZZLE_OFFSET_X + self.x * TILESIZE
+        self.rect.y = PUZZLE_OFFSET_Y + self.y * TILESIZE
 
     def click(self, mouse_x, mouse_y):
         return self.rect.left <= mouse_x <= self.rect.right and self.rect.top <= mouse_y <= self.rect.bottom
 
     def right(self):
-        return self.rect.x + TILESIZE < GAME_SIZE * TILESIZE
+        return self.x + 1 < GAME_SIZE
 
     def left(self):
-        return self.rect.x - TILESIZE >= 0
+        return self.x - 1 >= 0
 
     def up(self):
-        return self.rect.y - TILESIZE >= 0
+        return self.y - 1 >= 0
 
     def down(self):
-        return self.rect.y + TILESIZE < GAME_SIZE * TILESIZE
+        return self.y + 1 < GAME_SIZE
 
 class UIElement:
     def __init__(self, x, y, text):

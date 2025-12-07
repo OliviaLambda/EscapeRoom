@@ -1,20 +1,27 @@
 import pygame
+from EscapeRoom import TextBox
 
 pygame.init()
 
-screen = pygame.display.set_mode((500, 600))
+WIDTH, HEIGHT = 960, 540
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-clock_img = pygame.image.load("clock.png")
-min_img = pygame.image.load("min hand.png")
-hr_img = pygame.image.load("hr hand.png")
+textbox = TextBox("pics/textbox.png", WIDTH / 2, HEIGHT / 2)
+text_sprites = pygame.sprite.Group(textbox)
 
-clock_img = pygame.transform.scale(clock_img, (400, 400))
+clock_img = pygame.image.load("pics/clock.png")
+clock_img = pygame.transform.scale(clock_img, (WIDTH, HEIGHT))
 
-cx = 275
-cy = 325
+cx = WIDTH // 2
+cy = HEIGHT // 2
+clock_center = (cx, cy)
 
-min_angle = -30
-hr_angle = -30
+min_angles = [(cx, 60), (cx+210, cy), (cx, cy+210), (cx-210, cy)]
+min_point = 0
+
+hr_angles = [(cx, 150), (cx+75, cy-100), (cx+120, cy-60), (cx+150, cy), (cx+120, cy+60), (cx+75, cy+100),
+             (cx, 390), (cx-75, cy+100), (cx-120, cy+60), (cx-150, cy), (cx-120, cy-60), (cx-75, cy-100)]
+hr_point = 0
 
 running = True
 while running:
@@ -24,15 +31,16 @@ while running:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                min_angle = min_angle + 30
+                if min_point < len(min_angles)-1:
+                    min_point += 1
+                else:
+                    min_point = 0
             if event.button == 3:
-                hr_angle = hr_angle + 30
+                if hr_point < len(hr_angles)-1:
+                    hr_point += 1
+                else:
+                    hr_point = 0
 
-
-    if min_angle >= 360:
-        min_angle -= 360
-    if hr_angle >= 360:
-        hr_angle -= 360
 
     screen.fill((0, 0, 0))
 
@@ -40,15 +48,11 @@ while running:
     c = clock_img.get_rect(center=(cx, cy))
     screen.blit(clock_img, c)
 
+    pygame.draw.line(screen, (0, 0, 0), (cx, cy), min_angles[min_point], 6)
+    pygame.draw.line(screen, (0, 0, 0), (cx, cy), hr_angles[hr_point], 8)
 
-    min_rot = pygame.transform.rotate(min_img, -min_angle)
-    min_rect = min_rot.get_rect(center=(cx, cy))
-    screen.blit(min_rot, min_rect)
-
-
-    hr_rot = pygame.transform.rotate(hr_img, -hr_angle)
-    hr_rect = hr_rot.get_rect(center=(cx, cy))
-    screen.blit(hr_rot, hr_rect)
+    if hr_point == 6 and min_point == 1:
+        text_sprites.draw(screen)
 
     pygame.display.update()
 

@@ -1,17 +1,17 @@
 import pygame
 
 pygame.init()
-FONT = pygame.font.SysFont("constantia", 48)
+FONT = pygame.font.SysFont("constantia", 18)
 
 WIDTH, HEIGHT = 960, 540
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Escape Room")
 
 
-bg = pygame.image.load("startbackground.png").convert()
+bg = pygame.image.load("pics/startbackground.png").convert()
 bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
 
-bg_puzzle = pygame.image.load("puzzlebackground.png").convert()
+bg_puzzle = pygame.image.load("pics/puzzlebackground.png").convert()
 bg_puzzle = pygame.transform.scale(bg_puzzle, (WIDTH, HEIGHT))
 
 
@@ -27,21 +27,23 @@ class TextBox(pygame.sprite.Sprite):
     def __init__(self, image_path, x, y):
         super().__init__()
         self.image = pygame.image.load(image_path)
-        self.image = pygame.transform.scale(self.image, (352, 176))
+        self.image = pygame.transform.scale(self.image, (960, 540))
         self.rect = self.image.get_rect(center=(x, y))
 
 
-taller = Candle("pics/1.png", 200, 300, "taller")
-tall = Candle("pics/2.png", 400, 300, "tall")
-normal = Candle("pics/3.png", 600, 300, "normal")
-short = Candle("pics/4.png", 800, 300, "short")
-Candles = [short, normal, tall, taller]
+taller = Candle("pics/1.png", 120, 300, "taller")
+tall = Candle("pics/2.png", 300, 300, "tall")
+normal = Candle("pics/3.png", 480, 300, "normal")
+short = Candle("pics/4.png", 660, 300, "short")
+shortest = Candle("pics/5.png", 840, 300, "shortest")
+Candles = [shortest, short, normal, tall, taller]
 
 
-textbox = TextBox("textbox.png", 480, 400)
+textbox = TextBox("pics/textbox2.png", WIDTH / 2, HEIGHT / 2)
 
-candle_sprites = pygame.sprite.Group(short, normal, tall, taller)
-correct_order = ["taller", "normal", "tall", "short"]
+candle_sprites = pygame.sprite.Group(shortest, short, normal, tall, taller)
+correct_order = ["taller", "normal", "shortest", "tall", "short"]
+#correct_order = ["taller", "tall", "normal", "short", "shortest"]
 
 text_sprites = pygame.sprite.Group(textbox)
 
@@ -102,6 +104,7 @@ def main():
                 elif scene == "puzzle":
                     if exit_click_box.collidepoint(event.pos):
                         scene = "start"
+                        win = False
                     for sprite in candle_sprites:
                         if sprite.rect.collidepoint(event.pos):
                             selected_sprite = sprite
@@ -111,6 +114,8 @@ def main():
                             break
             elif event.type == pygame.MOUSEBUTTONUP:
                 selected_sprite = None
+                if scene == "puzzle" and check_order(Candles):
+                    win = True
 
             elif event.type == pygame.MOUSEMOTION:
                 if selected_sprite:
@@ -128,9 +133,17 @@ def main():
             win = True
         if win and scene == "puzzle":
             text_sprites.draw(WIN)
-            text = FONT.render("yippee!", True, (76, 38, 15))
-            WIN.blit(text, (WIDTH // 2 - text.get_width() // 2, 100))
-
+            clue_1 = ("After the last candle is in place, a note falls out of the drawer. It is a work"
+                      "\nschedule which shows that the Butler could not have been working at"
+                      "\nthe time of the murder.")
+            clue_1_text = clue_1.splitlines()
+            clue_1_lines = []
+            for line in clue_1_text:
+                clue_1_lines.append(FONT.render(line, True, (76, 38, 15)))
+            y_position = 385
+            for line_surface_1 in clue_1_lines:
+                WIN.blit(line_surface_1,(200 ,y_position))
+                y_position += 25
         pygame.display.flip()
         clock.tick(60)
 

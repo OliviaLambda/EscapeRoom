@@ -62,6 +62,18 @@ bg_clock_puzzle = pygame.transform.scale(bg_clock_puzzle, (WIDTH, HEIGHT))
 clock_puzzle_click_box = pygame.Rect(780, 30, 100, 100)
 clock_exit_click_box = pygame.Rect(0,0, 960, 100)
 
+note = pygame.image.load("pics/note.png")
+note = pygame.transform.scale(note, (WIDTH, HEIGHT))
+
+note_click_box = pygame.Rect(380, 380, 200, 60)
+note_exit_click_box = pygame.Rect(0,0, 960, 100)
+
+key = pygame.image.load("pics/key.png")
+key = pygame.transform.scale(key, (WIDTH, HEIGHT))
+
+key_click_box = pygame.Rect(870, 300, 70, 100)
+key_exit_click_box = pygame.Rect(0,0, 960, 100)
+
 cx = WIDTH // 2
 cy = HEIGHT // 2
 clock_center = (cx, cy)
@@ -79,12 +91,19 @@ def draw_clock_puzzle():
     pygame.draw.line(WIN, (0, 0, 0), (cx, cy), min_angles[min_point], 6)
     pygame.draw.line(WIN, (0, 0, 0), (cx, cy), hr_angles[hr_point], 8)
 
+def draw_note():
+    WIN.blit(note, (0, 0))
+
+def draw_key():
+    WIN.blit(key, (0, 0))
 
 # Picture Puzzle
 picturepuzzle = PicturePuzzle()
 
 picture_puzzle_click_box = pygame.Rect(410, 90, 145, 140)
 picture_exit_click_box = pygame.Rect(0,0, 960, 100)
+
+picturepuzzle_solved = False
 
 # End Puzzle
 end_puzzle_click_box = pygame.Rect(750, 130, 110, 380)
@@ -125,12 +144,13 @@ text_sprites = pygame.sprite.Group(textbox)
 
 def draw_start():
     WIN.blit(bg, (0, 0))
-
+    #pygame.draw.rect(WIN, (255, 0, 0), key_click_box, 3)
 
 def main():
     run = True
     scene = "start"
     win = False
+    global picturepuzzle_solved
 
     selected_sprite = None
     offset_x = 0
@@ -148,12 +168,17 @@ def main():
                         scene = "candle_puzzle"
                     elif clock_puzzle_click_box.collidepoint(event.pos):
                         scene = "clock_puzzle"
+                    elif note_click_box.collidepoint(event.pos):
+                        scene = "note"
+                    elif key_click_box.collidepoint(event.pos):
+                        scene = ("key")
                     elif picture_puzzle_click_box.collidepoint(event.pos):
                         scene = "picture_puzzle"
                         picturepuzzle.new()
                     elif end_puzzle_click_box.collidepoint(event.pos):
                         scene = "end_puzzle"
-                elif scene == "candle_puzzle":
+
+                elif scene == "candle_puzzle": #Candle Puzzle event handling
                     if candle_exit_click_box.collidepoint(event.pos):
                         scene = "start"
                         win = False
@@ -164,7 +189,8 @@ def main():
                             offset_x = sprite.rect.x - mouse_x
                             offset_y = sprite.rect.y - mouse_y
                             break
-                elif scene == "clock_puzzle":
+
+                elif scene == "clock_puzzle": #Clock Puzzle event handling
                     if clock_exit_click_box.collidepoint(event.pos):
                         scene = "start"
                     if event.button == 1:
@@ -179,10 +205,20 @@ def main():
                             hr_point += 1
                         else:
                             hr_point = 0
-                elif scene == "picture_puzzle":
+                elif scene == "note":
+                    if note_exit_click_box.collidepoint(event.pos):
+                        scene = "start"
+
+                elif scene == "key":
+                    if key_exit_click_box.collidepoint(event.pos):
+                        scene = "start"
+
+                elif scene == "picture_puzzle": #Picture Puzzle scene event handling
+                    picturepuzzle.events(event)
                     if picture_exit_click_box.collidepoint(event.pos):
                         scene = "start"
-                elif scene == "end_puzzle":
+
+                elif scene == "end_puzzle": # Ending event handling
                     if end_exit_click_box.collidepoint(event.pos):
                         scene = "start"
                     elif maid_click_box.collidepoint(event.pos):
@@ -200,12 +236,13 @@ def main():
                 if scene == "candle_puzzle" and check_order(Candles):
                     win = True
 
-            elif event.type == pygame.MOUSEMOTION:
+            elif event.type == pygame.MOUSEMOTION: # Moving the candles
                 if selected_sprite:
                     mouse_x, mouse_y = event.pos
                     selected_sprite.rect.x = mouse_x + offset_x
                     selected_sprite.rect.y = mouse_y + offset_y
 
+        # Drawing functions for each scene
         if scene == "start":
             draw_start()
         elif scene == "candle_puzzle":
@@ -213,10 +250,14 @@ def main():
             candle_sprites.update()
         elif scene == "clock_puzzle":
             draw_clock_puzzle()
+        elif scene == "note":
+            draw_note()
+        elif scene == "key":
+            draw_key()
         elif scene == "picture_puzzle":
-            picturepuzzle.update()
-            picturepuzzle.draw()
-            picturepuzzle.events(event)
+            if not picturepuzzle_solved:
+                picturepuzzle.update()
+                picturepuzzle.draw()
         elif scene == "end_puzzle":
             draw_end_puzzle()
             text = BIGFONT.render("WHO DID IT?", True, ((128, 0, 32)))
@@ -226,7 +267,7 @@ def main():
         elif scene == "win":
             draw_win()
 
-        if check_order(Candles):
+        if check_order(Candles): # Candle clue display
             win = True
         if win and scene == "candle_puzzle":
             text_sprites.draw(WIN)
@@ -242,10 +283,10 @@ def main():
                 WIN.blit(line_surface_1,(200 ,y_position))
                 y_position += 25
 
-        if hr_point == 6 and min_point == 1 and scene == "clock_puzzle":
+        if hr_point == 6 and min_point == 1 and scene == "clock_puzzle": # Clock clue display and win condition
             text_sprites.draw(WIN)
             clue_2 = ("The clock opens up, and you find a bottle of sleeping pills prescribed"
-                      "\nto the wife. You notice that the time on the clock corresponds to when"
+                      "\nto the Wife. You notice that the time on the clock corresponds to when"
                       "\nshe planned to wake up. 6:15 was past the time of the murder, meaning"
                       "\nshe was asleep during it.")
             clue_2_text = clue_2.splitlines()
@@ -256,6 +297,23 @@ def main():
             for line_surface_2 in clue_2_lines:
                 WIN.blit(line_surface_2, (200, y_position))
                 y_position += 25
+
+        if ((picturepuzzle.tiles_grid == picturepuzzle.tiles_completed_grid) and (scene == "picture_puzzle") and
+                (not picturepuzzle_solved)):
+            text_sprites.draw(WIN)
+            clue_3 = ("The painting opens up from the wall, revealing some kind of opening."
+                      "\nInside is a calendar, today's date marked with the word RAIN."
+                      "\nIt looks to be the Gardener's work schedule, indicating that he could"
+                      "\nnot have been working today.")
+            clue_3_text = clue_3.splitlines()
+            clue_3_lines = []
+            for line in clue_3_text:
+                clue_3_lines.append(FONT.render(line, True, (76, 38, 15)))
+            y_position = 370
+            for line_surface_3 in clue_3_lines:
+                WIN.blit(line_surface_3, (200, y_position))
+                y_position += 25
+            picturepuzzle_solved = True
 
         pygame.display.flip()
 

@@ -5,6 +5,8 @@ from settings import *
 
 class Game:
     def __init__(self):
+        self.tiles_completed_grid = None
+        self.tiles_grid = None
         pygame.init()
         self.all_sprites = None
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -95,6 +97,10 @@ class Game:
             self.draw()
 
     def update(self):
+        if self.start_game:
+            if self.tiles_grid == self.tiles_completed_grid:
+                self.start_game = False
+
         self.all_sprites.update()
         if self.start_shuffle:
             self.shuffle()
